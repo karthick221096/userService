@@ -18,5 +18,5 @@ public class BaseModel {
     private int id;
     private Date createdAt;
     private Date updatedAt;
-    private boolean isDeleted;
+    private boolean deleted;
 }
