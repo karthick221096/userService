@@ -65,8 +65,7 @@ public class UserServiceImp implements UserService{
         Optional<Token> tokenOptional = tokenRepository.findByValueAndDeletedAndExpiryAtGreaterThan(
                 token,
                 false,
-                new Date()
-        );
+                new Date());
 
         if(tokenOptional.isEmpty()){
             //TODO throw token invalid exception
