@@ -24,4 +24,6 @@ public class SecurityConfiguration {
 
         return http.build();
     }
+
+    // TODO - commenting as todo since i am marking this as commented because implementing oauth 2.0
 }
