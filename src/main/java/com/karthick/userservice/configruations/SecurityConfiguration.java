@@ -7,23 +7,23 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfiguration {
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests((request) -> {
-            try {
-                request
-                        .anyRequest()
-                        .permitAll()
-                        .and()
-                        .cors().disable()
-                        .csrf().disable();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        return http.build();
-    }
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http.authorizeHttpRequests((request) -> {
+//            try {
+//                request
+//                        .anyRequest()
+//                        .permitAll()
+//                        .and()
+//                        .cors().disable()
+//                        .csrf().disable();
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+//
+//        return http.build();
+//    }
 
     // TODO - commenting as todo since i am marking this as commented because implementing oauth 2.0
 }
