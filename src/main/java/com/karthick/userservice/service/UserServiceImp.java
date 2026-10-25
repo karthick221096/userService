@@ -1,5 +1,9 @@
 package com.karthick.userservice.service;
 
+import com.karthick.userservice.exceptions.InvalidPasswordException;
+import com.karthick.userservice.exceptions.InvalidTokenException;
+import com.karthick.userservice.exceptions.UserAlreadyExistsException;
+import com.karthick.userservice.exceptions.UserNotFoundException;
 import com.karthick.userservice.model.Token;
 import com.karthick.userservice.repository.TokenRepository;
 import com.karthick.userservice.model.User;
@@ -13,7 +17,7 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
-public class UserServiceImp implements UserService{
+public class UserServiceImp implements UserService {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UserRepository userRepository;
@@ -21,66 +25,61 @@ public class UserServiceImp implements UserService{
 
     public UserServiceImp(BCryptPasswordEncoder bCryptPasswordEncoder,
                           UserRepository userRepository,
-                          TokenRepository tokenRepository){
+                          TokenRepository tokenRepository) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
     }
+
     @Override
     public User signUp(String name, String email, String password) {
-
         Optional<User> userOptional = userRepository.findByEmail(email);
-
-        if(userOptional.isPresent()){
-            //TODO throw UserAlreadyPresent Exception
-            return null;
+        if (userOptional.isPresent()) {
+            throw new UserAlreadyExistsException("User with email " + email + " already exists");
         }
 
         User user = new User();
         user.setName(name);
         user.setEmail(email);
         user.setHashedPassword(bCryptPasswordEncoder.encode(password));
-
         return userRepository.save(user);
     }
 
     @Override
     public Token login(String email, String password) {
         Optional<User> userOptional = userRepository.findByEmail(email);
-        if(userOptional.isEmpty()){
-            //TODO throw user not found exception
-            return null;
+        if (userOptional.isEmpty()) {
+            throw new UserNotFoundException("User with email " + email + " not found");
         }
+
         User user = userOptional.get();
-        if(!bCryptPasswordEncoder.matches(password,user.getHashedPassword())){
-            //TODO throw password not matching exception
-            return null;
+        if (!bCryptPasswordEncoder.matches(password, user.getHashedPassword())) {
+            throw new InvalidPasswordException("Incorrect password");
         }
+
         Token token = createToken(user);
         return tokenRepository.save(token);
     }
 
     @Override
-    public User validate(String token) {
+    public User validate(String tokenValue) {
         Optional<Token> tokenOptional = tokenRepository.findByValueAndDeletedAndExpiryAtGreaterThan(
-                token,
+                tokenValue,
                 false,
                 new Date());
 
-        if(tokenOptional.isEmpty()){
-            //TODO throw token invalid exception
-            return null;
+        if (tokenOptional.isEmpty()) {
+            throw new InvalidTokenException("Token is invalid or expired");
         }
 
-        Token validatedToken = tokenOptional.get();
-        return validatedToken.getUser();
+        return tokenOptional.get().getUser();
     }
 
     @Override
     public void logout(String tokenValue) {
-        Optional<Token> tokenOptional = tokenRepository.findByValueAndDeleted(tokenValue,false);
-        if(tokenOptional.isEmpty()){
-            //TODO throw token not found exception
+        Optional<Token> tokenOptional = tokenRepository.findByValueAndDeleted(tokenValue, false);
+        if (tokenOptional.isEmpty()) {
+            throw new InvalidTokenException("Token not found or already logged out");
         }
 
         Token token = tokenOptional.get();
@@ -88,7 +87,7 @@ public class UserServiceImp implements UserService{
         tokenRepository.save(token);
     }
 
-    private Token createToken(User user){
+    private Token createToken(User user) {
         Token token = new Token();
         token.setValue(RandomStringUtils.randomAlphanumeric(128));
         token.setUser(user);
@@ -96,10 +95,8 @@ public class UserServiceImp implements UserService{
         Date today = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(today);
-        calendar.add(Calendar.DAY_OF_MONTH,30);
-        Date dateAfter30Days = calendar.getTime();
-
-        token.setExpiryAt(dateAfter30Days);
+        calendar.add(Calendar.DAY_OF_MONTH, 30);
+        token.setExpiryAt(calendar.getTime());
         token.setDeleted(false);
         return token;
     }

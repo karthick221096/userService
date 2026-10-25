@@ -20,15 +20,18 @@ public class UserDetailsImp implements UserDetails {
     private List<GrantedAuthority> grantedAuthorities;
 
     public UserDetailsImp(User user){
-        this.userName = user.getName();
+        this.userName = user.getEmail();
         this.password = user.getHashedPassword();
         this.enabled = true;
         this.accountNonExpired = true;
         this.credentialsNonExpired = true;
         this.accountNonLocked = true;
 
-        for(Role role : user.getRoles()){
-            grantedAuthorities.add(new GrantedAuthorityImp(role));
+        this.grantedAuthorities = new java.util.ArrayList<>();
+        if(user.getRoles() != null) {
+            for (Role role : user.getRoles()) {
+                grantedAuthorities.add(new GrantedAuthorityImp(role));
+            }
         }
     }
 
