@@ -1,23 +1,44 @@
+
 # userService
 
-Learning to create a user authentication service using java
+Authentication and authorization service for the e-commerce platform
+(userService, productService, PaymentService). It issues JWT access tokens
+through OAuth2 / OpenID Connect using Spring Authorization Server.
 
-### What this does
-* User signup with bcrypt password hashing
-* User login and logout with token management
-* Token validation for other services to verify logged in users
-* OAuth2 Authorization Server to issue JWT tokens
-* Role based access for users
+## What it does
+- User signup with BCrypt-hashed passwords
+- Roles (`ADMIN`, `USER`) stored per user and returned in the JWT `roles` claim
+- OAuth2 / OpenID Connect authorization server with JPA-backed clients and authorizations
+- Domain exceptions mapped to HTTP responses (for example 409 on a duplicate email)
 
-### Requirements
-* User signup, login, logout apis
-* Token validation api used by productService and paymentService
-* BCrypt password encoding
-* OAuth2 jwt token issuing
-* Role management for users
+## Endpoints
+| Method | Path | Notes |
+  |---|---|---|
+| POST | `/users/signup` | Public. Body: `name`, `email`, `password` |
+| GET | `/.well-known/openid-configuration` | OIDC discovery, issuer `http://localhost:9091` |
+| GET | `/oauth2/authorize` | Authorization endpoint |
+| POST | `/oauth2/token` | Token endpoint |
+| GET | `/oauth2/jwks` | Public signing keys |
+| GET | `/login` | Form login used by the authorization code flow |
 
-### How to run
-* Make sure mysql is running on port 3306
-* Create database userService in mysql
-* Run UserServiceApplication.java from intellij
-* Service starts on port 9091
+## Tech
+Java 17, Spring Boot 3.4.x, Spring Security with Spring Authorization Server,
+Spring Data JPA, MySQL.
+
+## Run
+1. Start MySQL on port 3306 and create the database `userService`.
+2. Provide the datasource username and password through environment variables
+   or a local, uncommitted `application.properties`.
+3. `./mvnw spring-boot:run` (the service starts on port 9091).
+
+## Getting a token
+An OAuth2 client must be registered in the `client` table before tokens can be
+requested. Use the Authorization Code flow, for example from Postman:
+- Authorization URL: `http://localhost:9091/oauth2/authorize`
+- Token URL: `http://localhost:9091/oauth2/token`
+- Client id and secret: those of your registered client
+- Callback URL: the redirect URI registered for that client
+- Scope: `openid profile`
+
+Log in with the email and password of a signed-up user. The access token carries
+the user's roles in the `roles` claim.
