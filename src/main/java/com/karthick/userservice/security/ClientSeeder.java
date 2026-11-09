@@ -28,8 +28,10 @@ public class ClientSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        if(repository.findByClientId("product-service-client") != null) {
-            return; // already seeded
+        // Delete and re-seed so grant type changes are picked up on restart
+        RegisteredClient existing = repository.findByClientId("product-service-client");
+        if (existing != null) {
+            return; // already seeded — to re-seed, delete the client row from oauth2_registered_client table
         }
 
         repository.save(RegisteredClient.withId(UUID.randomUUID().toString())
@@ -39,6 +41,7 @@ public class ClientSeeder implements ApplicationRunner {
                         .scope("product.write")
                         .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                         .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                         .redirectUri("http://localhost:8080/login/oauth2/code/product-service-client-oidc")
                         .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
                         .build());

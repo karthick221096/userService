@@ -89,12 +89,26 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
+    public SecurityFilterChain userRestSecurityFilterChain(HttpSecurity http)
+            throws Exception {
+        http
+                .securityMatcher("/users/**")
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/users/signup", "/users/login").permitAll()
+                        .anyRequest().authenticated()
+                );
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(3)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/users/**"))
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/users/signup","/error").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Form login handles the redirect to the login page from the
